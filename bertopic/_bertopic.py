@@ -141,6 +141,7 @@ class BERTopic:
         calculate_probabilities: bool = False,
         seed_topic_list: List[List[str]] = None,
         zeroshot_topic_list: List[str] = None,
+        zeroshot_embeddings: np.ndarray = None,
         zeroshot_min_similarity: float = 0.7,
         embedding_model=None,
         umap_model: UMAP = None,
@@ -191,6 +192,7 @@ class BERTopic:
                                      as used in HDBSCAN and not an exact representation.
             seed_topic_list: A list of seed words per topic to converge around
             zeroshot_topic_list: A list of topic names to use for zero-shot classification
+            zeroshot_embeddings: Pre-calculated embeddings for the zero-shot topics
             zeroshot_min_similarity: The minimum similarity between a zero-shot topic and
                                      a document for assignment. The higher this value, the more
                                      confident the model needs to be to assign a zero-shot topic to a document.
@@ -232,6 +234,7 @@ class BERTopic:
         self.verbose = verbose
         self.seed_topic_list = seed_topic_list
         self.zeroshot_topic_list = zeroshot_topic_list
+        self.zeroshot_embeddings = zeroshot_embeddings
         self.zeroshot_min_similarity = zeroshot_min_similarity
 
         # Embedding model
@@ -3818,7 +3821,10 @@ class BERTopic:
         """
         logger.info("Zeroshot Step 1 - Finding documents that could be assigned to either one of the zero-shot topics")
         # Similarity between document and zero-shot topic embeddings
-        zeroshot_embeddings = self._extract_embeddings(self.zeroshot_topic_list)
+        if self.zeroshot_embeddings is None:
+            zeroshot_embeddings = self._extract_embeddings(self.zeroshot_topic_list)
+        else:
+            zeroshot_embeddings = self.zeroshot_embeddings
         cosine_similarities = cosine_similarity(embeddings, zeroshot_embeddings)
         assignment = np.argmax(cosine_similarities, 1)
         assignment_vals = np.max(cosine_similarities, 1)
@@ -3863,7 +3869,7 @@ class BERTopic:
         * Embedding model is necessary to convert zero-shot topics to embeddings
         * Zero-shot topics should be defined
         """
-        if self.zeroshot_topic_list is not None and self.embedding_model is not None:
+        if self.zeroshot_topic_list is not None and (self.embedding_model is not None or self.zeroshot_embeddings is not None):
             return True
         return False
 
