@@ -4745,7 +4745,10 @@ class TopicMapper:
                     topic_model.zeroshot_topic_list[topic_model._topic_id_to_zeroshot_topic_idx[topic_id]]
                     for topic_id in zeroshot_topic_ids
                 ]
-                zeroshot_embeddings = topic_model._extract_embeddings(zeroshot_labels)
+                if topic_model.zeroshot_embeddings is None:
+                    zeroshot_embeddings = topic_model._extract_embeddings(zeroshot_labels)
+                else:
+                    zeroshot_embeddings = topic_model.zeroshot_embeddings
                 cosine_similarities = cosine_similarity(
                     zeroshot_embeddings, [topic_model.topic_embeddings_[topic_to]]
                 ).flatten()
