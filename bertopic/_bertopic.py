@@ -1,6 +1,7 @@
 # ruff: noqa: E402
-import yaml
 import warnings
+
+import yaml
 
 warnings.filterwarnings("ignore", category=FutureWarning)
 warnings.filterwarnings("ignore", category=UserWarning)
@@ -10,64 +11,58 @@ try:
 except (KeyError, AttributeError, TypeError):
     pass
 
-import re
-import math
-import joblib
-import inspect
 import collections
+import inspect
+import math
+import re
+# Typing
+import sys
+from collections import Counter, defaultdict
+from pathlib import Path
+from tempfile import TemporaryDirectory
+
+import joblib
 import numpy as np
 import pandas as pd
 import scipy.sparse as sp
-
-from tqdm import tqdm
-from pathlib import Path
 from packaging import version
-from tempfile import TemporaryDirectory
-from collections import defaultdict, Counter
-from scipy.sparse import csr_matrix
 from scipy.cluster import hierarchy as sch
-
-# Typing
-import sys
+from scipy.sparse import csr_matrix
+from tqdm import tqdm
 
 if sys.version_info >= (3, 8):
     from typing import Literal
 else:
     from typing_extensions import Literal
-from typing import List, Tuple, Union, Mapping, Any, Callable, Iterable
+
+from typing import Any, Callable, Iterable, List, Mapping, Tuple, Union
 
 # Models
 import hdbscan
-from umap import UMAP
-from sklearn.preprocessing import normalize
-from sklearn import __version__ as sklearn_version
-from sklearn.cluster import AgglomerativeClustering
-from sklearn.metrics.pairwise import cosine_similarity
-from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
-
-# BERTopic
-from bertopic import plotting
-from bertopic.cluster import BaseCluster
-from bertopic.backend import BaseEmbedder
-from bertopic.representation._mmr import mmr
-from bertopic.backend._utils import select_backend
-from bertopic.vectorizers import ClassTfidfTransformer
-from bertopic.representation import BaseRepresentation
-from bertopic.dimensionality import BaseDimensionalityReduction
-from bertopic.cluster._utils import hdbscan_delegator, is_supported_hdbscan
-from bertopic._utils import (
-    MyLogger,
-    check_documents_type,
-    check_embeddings_shape,
-    check_is_fitted,
-    validate_distance_matrix,
-    select_topic_representation,
-    get_unique_distances,
-)
-import bertopic._save_utils as save_utils
-
 # Visualization
 import plotly.graph_objects as go
+from sklearn import __version__ as sklearn_version
+from sklearn.cluster import AgglomerativeClustering
+from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
+from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.preprocessing import normalize
+from umap import UMAP
+
+import bertopic._save_utils as save_utils
+# BERTopic
+from bertopic import plotting
+from bertopic._utils import (MyLogger, check_documents_type,
+                             check_embeddings_shape, check_is_fitted,
+                             get_unique_distances, select_topic_representation,
+                             validate_distance_matrix)
+from bertopic.backend import BaseEmbedder
+from bertopic.backend._utils import select_backend
+from bertopic.cluster import BaseCluster
+from bertopic.cluster._utils import hdbscan_delegator, is_supported_hdbscan
+from bertopic.dimensionality import BaseDimensionalityReduction
+from bertopic.representation import BaseRepresentation
+from bertopic.representation._mmr import mmr
+from bertopic.vectorizers import ClassTfidfTransformer
 
 logger = MyLogger()
 logger.configure("WARNING")
@@ -4289,9 +4284,8 @@ class BERTopic:
         labels = sorted(list(documents.Topic.unique()))
         labels = [int(label) for label in labels]
 
-        # Get at least the top 30 indices and values per row in a sparse c-TF-IDF matrix
-        top_n_words = max(self.top_n_words, 30)
-        indices = self._top_n_idx_sparse(c_tf_idf, top_n_words)
+        # Get at least the top top_n_words indices and values per row in a sparse c-TF-IDF matrix
+        indices = self._top_n_idx_sparse(c_tf_idf, self.top_n_words)
         scores = self._top_n_values_sparse(c_tf_idf, indices)
         sorted_indices = np.argsort(scores, 1)
         indices = np.take_along_axis(indices, sorted_indices, axis=1)
